@@ -108,7 +108,25 @@ jobs:
     <<: *SET_WORKING_DIR_TO_REPO
     steps:
       - <<: *RUN_CHECKOUT_SHALLOW_GIT_REPO
-      - run: echo "A first hello"
+      - <<: *RUN_CREATE_NODE_MODULES_CACHE_KEY
+      - restore_cache:
+          name: Restoring cache for node_modules
+          # To bust the cache, increment the cache key, e.g. v1 to v2. You might
+          # need to bust the cache if the caching logic has a bug.
+          # https://circleci.com/docs/2.0/caching/#restoring-cache
+          keys:
+            - node-modules-ci-cache-test-v0-{{ checksum ".circleci/node_modules_cache_key" }}
+      - run:
+          name: Checking if node_modules cache is up-to-date
+          command: .circleci/check_node_modules_cache_freshness.sh
+      - run:
+          name: Installing NPM dependencies into node_modules
+          command: .circleci/run_npm_install.sh
+      - save_cache:
+          name: Saving cache for node_modules
+          key: node-modules-ci-cache-test-v0-{{ checksum ".circleci/node_modules_cache_key" }}
+          paths:
+            - /dev/shm/ci/ci_speed_test/node_modules
 
 workflows:
   version: 2
