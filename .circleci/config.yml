@@ -109,6 +109,14 @@ jobs:
     steps:
       - <<: *RUN_CHECKOUT_SHALLOW_GIT_REPO
       - <<: *RUN_CREATE_NODE_MODULES_CACHE_KEY
+      - run:
+          name: Halting
+          # Undocumented command
+          # https://ideas.circleci.com/ideas/CCI-I-260
+          command: |
+            circleci --help || true
+            circleci help || true
+            circleci step halt
       - restore_cache:
           name: Restoring cache for node_modules
           # To bust the cache, increment the cache key, e.g. v1 to v2. You might
