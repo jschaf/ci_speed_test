@@ -1,8 +1,118 @@
 version: 2
-jobs:
-  build:
+
+
+aliases:
+  # Gets a shallow clone of the repo. The reason we have to do this ourselves is
+  # because GitHub doesn't like shallow clones because they're computationally
+  # expensive so CircleCI won't offer it. See:
+  # https://github.com/circleci/circleci-docs/issues/2040#issuecomment-368129275
+  - &RUN_CHECKOUT_SHALLOW_GIT_REPO
+    run:
+      name: Checkout a Git repo with a shallow depth
+      command: |
+        # Add github.com to known hosts
+        mkdir -p ${HOME}/.ssh
+        echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+        ' >> ${HOME}/.ssh/known_hosts
+
+        # Run in subshell to avoid changing umask for the entire script.
+        # umask 077 creates files with permission 600.
+        (umask 077; touch ${HOME}/.ssh/id_rsa)
+        chmod 0600 ${HOME}/.ssh/id_rsa
+        (echo "${CHECKOUT_KEY:-}" > ${HOME}/.ssh/id_rsa)
+
+        git config --global gc.auto 0
+
+        REPO_DIR="/home/circleci/${CIRCLE_PROJECT_REPONAME}"
+        mkdir -p "${REPO_DIR}"
+        cd "${REPO_DIR}"
+        if [[ -d .git ]]; then
+          echo "ERROR: Git directory already exists at ${PWD}."
+          exit 1
+        fi
+
+        handle_failed_git_fetch() {
+          echo 'ERROR: failed to fetch from GitHub. Possible causes:'
+          echo -n '  - GitHub is rate-limiting us for using the --depth=1 option. '
+          echo 'https://github.com/circleci/circleci-docs/issues/2040#issuecomment-368129275'
+          exit 1
+        }
+
+        echo
+        echo '# Cloning repo and fetching the right commit'
+        echo '============================================'
+        echo "Fetching SHA1 ${CIRCLE_SHA1} from ${CIRCLE_REPOSITORY_URL}."
+        echo
+        git init
+        git remote add origin "${CIRCLE_REPOSITORY_URL}"
+        # Fetch the SHA1 object directly and assign it the name local_ci_branch.
+        git fetch --depth=1 --force origin "${CIRCLE_SHA1}:local_ci_branch" || handle_failed_git_fetch
+        git checkout --quiet local_ci_branch
+
+  - &RUN_CREATE_NODE_MODULES_CACHE_KEY
+    run:
+      name: Creating node_modules cache key from patches/* and package-lock.json
+      command: sh .circleci/create_node_modules_cache_key.sh
+
+  # Symlinks node_modules to /dev/shm. Reduces saving and restoring cache from
+  # 2 minutes to 30 seconds.
+  - &RUN_SYMLINK_NODE_MODULES_TO_MEMFS
+    run:
+      name: Symlinking node_modules to an in-memory filesystem
+      command: |
+        dir=/dev/shm/ci/node_modules
+        if [[ ! -d "${dir}" ]]; then
+          echo "ERROR: node_modules not found at ${dir}"
+          echo '  Was node_modules cache restored?'
+          exit 1
+        fi
+        ln -s "${dir}" /home/ci/ci_speed_test/node_modules
+
+  - &SET_WORKING_DIR_TO_REPO
+    working_directory: /home/ci/ci_speed_test
+
+  - &USE_DOCKER_NODE_IMAGE
     docker:
-      - image: circleci/ruby:2.4.1
+      - image: jschaf/debian-ci-speed-test-node:latest
+
+  - &USE_DOCKER_NPM_IMAGE
+    docker:
+      - image: jschaf/debian-ci-speed-test-node-npm:latest
+
+  - &ATTACH_CODE_WORKSPACE
+    attach_workspace:
+      at: /home/ci/ci_speed_test
+
+  - &RESTORE_NODE_MODULES_CACHE
+    restore_cache:
+      name: Restoring cache for node_modules
+      keys:
+        - node-modules-ci-cache-v1-{{ checksum ".circleci/node_modules_cache_key" }}
+jobs:
+  # Checks out the repo and persists it to a CircleCI workspace so it can be
+  # used by all subsequent jobs in a single CircleCI workflow.
+  checkout_repo:
+    docker:
+      - image: jschaf/alpine-ci-git:latest
+    <<: *SET_WORKING_DIR_TO_REPO
     steps:
-      - checkout
+      - <<: *RUN_CHECKOUT_SHALLOW_GIT_REPO
+#      - <<: *RUN_CREATE_NODE_MODULES_CACHE_KEY
+      - persist_to_workspace:
+          root: /home/ci/ci_speed_test
+          paths:
+            - .
+
+  build_node_modules:
+    <<: *USE_DOCKER_NPM_IMAGE
+    <<: *SET_WORKING_DIR_TO_REPO
+    steps:
+      - <<: *RUN_CHECKOUT_SHALLOW_GIT_REPO
       - run: echo "A first hello"
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - checkout_repo
+      - build_node_modules
