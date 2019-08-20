@@ -3,8 +3,10 @@ ARG ALPINE_VERSION=3.10.1
 # Alias the base image so we can upgrade it in one spot.
 FROM alpine:${ALPINE_VERSION} as alpine
 
-FROM alpine as ssh-builder
-RUN apk --no-cache add openssh
+
+FROM alpine as certs-builder
+RUN apk --no-cache add ca-certificates
+
 
 FROM alpine as git-builder
 RUN set -eux \
@@ -17,9 +19,15 @@ RUN set -eux \
     git-submodule git-web--browse
 
 
+FROM alpine as ssh-builder
+RUN apk --no-cache add openssh
+
+
 # docker build --target alpine-ci-git -t jschaf/alpine-ci-git:latest docker/alpine-ci
 # docker run --interactive --tty jschaf/alpine-ci-git:latest
 FROM alpine as alpine-ci-git
+# Certs
+COPY --from=certs-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 # Git
 COPY --from=git-builder /usr/bin/git /usr/bin/
 COPY --from=git-builder \

@@ -52,7 +52,7 @@ aliases:
   - &RUN_CREATE_NODE_MODULES_CACHE_KEY
     run:
       name: Creating node_modules cache key from patches/* and package-lock.json
-      command: sh .circleci/create_node_modules_cache_key.sh
+      command: .circleci/create_node_modules_cache_key.sh
 
   # Symlinks node_modules to /dev/shm. Reduces saving and restoring cache from
   # 2 minutes to 30 seconds.
@@ -97,7 +97,7 @@ jobs:
     <<: *SET_WORKING_DIR_TO_REPO
     steps:
       - <<: *RUN_CHECKOUT_SHALLOW_GIT_REPO
-#      - <<: *RUN_CREATE_NODE_MODULES_CACHE_KEY
+      - <<: *RUN_CREATE_NODE_MODULES_CACHE_KEY
       - persist_to_workspace:
           root: /home/ci/ci_speed_test
           paths:
