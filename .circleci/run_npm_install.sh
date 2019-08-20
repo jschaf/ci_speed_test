@@ -20,8 +20,7 @@ fi
 # Move to /dev/shm because we want the speed up of having node_modules in /dev/shm.
 mkdir -p /dev/shm/ci/ci_speed_test
 cp /home/ci/ci_speed_test/{package.json,package-lock.json} /dev/shm/ci/ci_speed_test
-cp -r /home/circleci/heap/patches /dev/shm/heap
-cd /dev/shm/heap
+cd /dev/shm/ci/ci_speed_test
 
 # Make a backup so we can see if npm ci changed package-lock.json.
 cp package-lock.json old-package-lock.json
