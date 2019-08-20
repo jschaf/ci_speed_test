@@ -23,7 +23,7 @@ aliases:
 
         git config --global gc.auto 0
 
-        REPO_DIR="/home/circleci/${CIRCLE_PROJECT_REPONAME}"
+        REPO_DIR="/home/ci/${CIRCLE_PROJECT_REPONAME}"
         mkdir -p "${REPO_DIR}"
         cd "${REPO_DIR}"
         if [[ -d .git ]]; then
