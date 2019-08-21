@@ -11,22 +11,22 @@ set -o pipefail
 # current state of the repo matches the cache key for the node_modules
 # precheck key.
 
-echo "node version: $(node --version)"
-echo "npm version: $(npm --version)"
-echo
+REPO_DIR='/home/ci/ci_speed_test/'
+REPO_RAMFS_DIR='/dev/shm/ci/ci_speed_test'
+NODE_MODULES_DIR='/dev/shm/ci/ci_speed_test/node_modules'
 
 printf '
 # Checking if node_modules cache is fresh
 =========================================\n\n'
 
-current_hash_file='/home/ci/ci_speed_test/.circleci/node_modules_cache_key'
+current_hash_file="${REPO_DIR}/.circleci/node_modules_cache_key"
 if [[ ! -e "${current_hash_file}" ]]; then
   echo "ERROR: node_modules cache key file not found at ${current_hash_file}."
   echo '   The cache key file should be created in the checkout_repo step.'
 fi
 current_hash="$(< "${current_hash_file}")"
 
-precheck_hash_file='/home/ci/ci_speed_test/.circleci/node_modules_precheck_cache_key'
+precheck_hash_file="${REPO_DIR}/.circleci/node_modules_precheck_cache_key"
 precheck_hash='<none>'
 precheck_status='stale'
 if [[ -f "${precheck_hash_file}" ]]; then
@@ -50,17 +50,26 @@ printf '
 # Installing node_modules because cache is stale
 ================================================\n\n'
 
+echo "node version: $(node --version)"
+echo "npm version: $(npm --version)"
+echo
+
 # Move to /dev/shm because for IO speedup.
-mkdir -p /dev/shm/ci/ci_speed_test
-cp /home/ci/ci_speed_test/package-lock.json /dev/shm/ci/ci_speed_test
-cp /home/ci/ci_speed_test/package.json /dev/shm/ci/ci_speed_test
-cd /dev/shm/ci/ci_speed_test
+mkdir -p ${REPO_RAMFS_DIR}
+cp ${REPO_DIR}/package-lock.json ${REPO_RAMFS_DIR}
+cp ${REPO_DIR}/package.json ${REPO_RAMFS_DIR}
+cd ${REPO_RAMFS_DIR}
 
 # Install node_modules.
 npm ci --ignore-scripts --prefer-offline --no-audit
 
 printf '
+# Pruning node_modules
+======================\n\n'
+node-prune ${NODE_MODULES_DIR}
+
+printf '
 # node_modules size
 ===================\n\n'
-du -msh /dev/shm/ci/ci_speed_test/node_modules
+du -sh ${NODE_MODULES_DIR}
 
