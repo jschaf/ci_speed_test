@@ -59,17 +59,17 @@ aliases:
   # https://circleci.com/docs/2.0/caching/#restoring-cache
   - &NODE_MODULES_CACHE_RESTORE_KEY
     keys:
-      - node-modules-ci-cache-test-v0-{{ checksum ".circleci/node_modules_cache_key" }}
+      - node-modules-ci-cache-test-v1-{{ checksum ".circleci/node_modules_cache_key" }}
 
   - &NODE_MODULES_CACHE_SAVE_KEY
-    key: node-modules-ci-cache-test-v0-{{ checksum ".circleci/node_modules_cache_key" }}
+    key: node-modules-ci-cache-test-v1-{{ checksum ".circleci/node_modules_cache_key" }}
 
   - &NODE_MODULES_PRECHECK_CACHE_RESTORE_KEY
     keys:
-      - node-modules-ci-cache-precheck-test-v0-{{ checksum ".circleci/node_modules_cache_key" }}
+      - node-modules-ci-cache-precheck-test-v1-{{ checksum ".circleci/node_modules_cache_key" }}
 
   - &NODE_MODULES_PRECHECK_CACHE_SAVE_KEY
-    key: node-modules-ci-cache-precheck-test-v0-{{ checksum ".circleci/node_modules_cache_key" }}
+    key: node-modules-ci-cache-precheck-test-v1-{{ checksum ".circleci/node_modules_cache_key" }}
 
   - &SET_WORKING_DIR_TO_REPO
     working_directory: /home/ci/ci_speed_test
