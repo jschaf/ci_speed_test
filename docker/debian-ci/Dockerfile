@@ -84,7 +84,8 @@ ARG CI_HOME=/home/ci
 ARG REPO=/home/ci/ci_speed_test
 # node-prune
 COPY --from=builder-node-prune /go/bin/node-prune /usr/local/bin/
-COPY shim_mocha.js shim_tsc.js ${REPO}/bin/
+COPY shim_mocha.js ${REPO}/bin/mocha
+COPY shim_tsc.js ${REPO}/bin/tsc
 RUN set -eux \
   && node_modules='/usr/local/lib/node_modules' \
   && node-prune ${node_modules} \

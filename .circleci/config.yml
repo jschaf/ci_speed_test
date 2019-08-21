@@ -74,6 +74,10 @@ aliases:
   - &SET_WORKING_DIR_TO_REPO
     working_directory: /home/ci/ci_speed_test
 
+  - &USE_DOCKER_DEBIAN_NODE_IMAGE
+    docker:
+      - image: jschaf/debian-ci-node:latest
+
   - &USE_DOCKER_NODE_IMAGE
     docker:
       - image: jschaf/alpine-ci-node:latest
@@ -127,18 +131,25 @@ jobs:
           paths:
             - /dev/shm/ci/ci_speed_test/node_modules
 
-  run_test:
+  run_test_debian:
+    <<: *USE_DOCKER_DEBIAN_NODE_IMAGE
+    <<: *SET_WORKING_DIR_TO_REPO
+    steps:
+      - <<: *ATTACH_CODE_WORKSPACE
+      - <<: *RESTORE_NODE_MODULES_CACHE
+      - run:
+          name: Hello
+          command: echo hi
+
+  run_test_alpine:
     <<: *USE_DOCKER_NODE_IMAGE
     <<: *SET_WORKING_DIR_TO_REPO
     steps:
       - <<: *ATTACH_CODE_WORKSPACE
       - <<: *RESTORE_NODE_MODULES_CACHE
       - run:
-          name: hi
-          command: |
-            circleci step help || true
-            circleci help || true
-
+          name: Hello
+          command: echo hi
 
 workflows:
   version: 2
@@ -146,7 +157,11 @@ workflows:
     jobs:
       - checkout_repo
       - build_node_modules
-      - run_test:
+      - run_test_debian:
+          requires:
+            - checkout_repo
+            - build_node_modules
+      - run_test_alpine:
           requires:
             - checkout_repo
             - build_node_modules

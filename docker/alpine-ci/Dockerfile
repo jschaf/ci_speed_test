@@ -102,7 +102,8 @@ COPY --from=builder-node /usr/lib/libgcc_s.so.1 '/usr/lib/libstdc++.so.6' /usr/l
 # node-prune
 COPY --from=builder-node-prune /go/bin/node-prune /usr/local/bin/
 # Shims
-COPY shim_mocha.js shim_tsc.js ${REPO}/bin/
+COPY shim_mocha.js ${REPO}/bin/mocha
+COPY shim_tsc.js ${REPO}/bin/tsc
 RUN set -eux \
   && mkdir -p ${REPO} \
   && ln -s ${REPO_RAMFS}/node_modules ${REPO}/node_modules \
