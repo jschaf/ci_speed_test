@@ -66,8 +66,9 @@ npm ci --ignore-scripts --prefer-offline --no-audit
 printf '
 # Updating precheck cache key
 =============================\n'
-echo "Writing hash '${precheck_hash}' to ${precheck_hash_file}."
-echo "${precheck_hash}" > "${precheck_hash_file}"
+echo "Writing hash '${current_hash}' to ${precheck_hash_file}."
+echo 'The hash will be saved to the node_modules precheck cache.'
+echo "${current_hash}" > "${precheck_hash_file}"
 
 printf '
 # Pruning node_modules
