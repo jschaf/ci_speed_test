@@ -61,6 +61,6 @@ npm ci --ignore-scripts --prefer-offline --no-audit
 
 printf '
 # node_modules size
-===================\n'
-du -sh /dev/shm/ci/ci_speed_test/node_modules
+===================\n\n'
+du -msh /dev/shm/ci/ci_speed_test/node_modules
 
