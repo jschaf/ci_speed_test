@@ -134,6 +134,7 @@ jobs:
     <<: *USE_DOCKER_NPM_IMAGE
     <<: *SET_WORKING_DIR_TO_REPO
     steps:
+      - <<: *ATTACH_CODE_WORKSPACE
       - <<: *RESTORE_NODE_MODULES_CACHE
       - run:
           name: hi

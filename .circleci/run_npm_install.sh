@@ -15,6 +15,10 @@ echo "node version: $(node --version)"
 echo "npm version: $(npm --version)"
 echo
 
+printf '
+# Checking if node_modules cache is fresh
+=========================================\n\n'
+
 current_hash_file='/home/ci/ci_speed_test/.circleci/node_modules_cache_key'
 if [[ ! -e "${current_hash_file}" ]]; then
   echo "ERROR: node_modules cache key file not found at ${current_hash_file}."
@@ -52,36 +56,16 @@ cp /home/ci/ci_speed_test/package-lock.json /dev/shm/ci/ci_speed_test
 cp /home/ci/ci_speed_test/package.json /dev/shm/ci/ci_speed_test
 cd /dev/shm/ci/ci_speed_test
 
-# Make a backup to check if npm ci changed package-lock.json.
-cp package-lock.json old-package-lock.json
-
 # Install node_modules.
 npm ci --ignore-scripts --prefer-offline --no-audit
 
-
 printf '
-node_modules size
-=================\n'
-time du -sh /dev/shm/ci/ci_speed_test/node_modules
+# node_modules size
+===================\n'
+du -sh /dev/shm/ci/ci_speed_test/node_modules
 
 # npm ci deletes node_modules before starting, so this needs to come after
 # npm ci.
 echo
 echo "Writing hash ${current_hash} to ${precheck_hash_file}"
 echo "${current_hash}" > "${precheck_hash_file}"
-
-# With npm ci, this should never happen.  npm install, however, may modify
-# package-lock.json. See https://stackoverflow.com/a/45566871/30900.
-if ! cmp --silent old-package-lock.json package-lock.json; then
-  echo
-  echo '# Warning: npm ci changed package-lock.json'
-  echo '# ========================================='
-  echo
-  echo '`npm ci` should never modify package-lock.json. The build fails if package-lock.json'
-  echo 'changes because we use the SHA1 hash of package-lock.json as the cache key for '
-  echo 'node_modules.  If package-lock.json changed, subsequent jobs in this workflow will'
-  echo 'not be able to restore the node_modules cache. The diff is below:'
-  echo
-  git --no-pager diff --no-index old-package-lock.json package-lock.json || true
-  exit 1
-fi
