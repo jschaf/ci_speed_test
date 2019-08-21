@@ -95,7 +95,7 @@ jobs:
   # used by all subsequent jobs in a single CircleCI workflow.
   checkout_repo:
     docker:
-      - image: jschaf/alpine-ci:latest
+      - image: jschaf/distroless-ci:latest
     <<: *SET_WORKING_DIR_TO_REPO
     steps:
       - <<: *RUN_CHECKOUT_SHALLOW_GIT_REPO

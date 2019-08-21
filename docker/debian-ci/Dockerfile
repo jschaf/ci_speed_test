@@ -1,4 +1,4 @@
-ARG DEBIAN_VERSION=sid-20190812-slim
+ARG DEBIAN_VERSION=stretch-20190812-slim
 ARG NODE_VERSION=10.15.3
 ARG PYTHON_VERSION=2.7.16
 
@@ -10,6 +10,11 @@ FROM debian:${DEBIAN_VERSION} as debian
 ENV CI_HOME=/home/ci
 RUN set -eux \
   && rm -rf /usr/share/common-licenses /usr/share/doc
+
+
+FROM gcr.io/distroless/base as distroless-base
+FROM gcr.io/distroless/base:debug as distroless-base-debug
+
 
 
 # Builder image for certs to copy into the base Debian image.
@@ -25,9 +30,20 @@ RUN apk add --no-cache git && go get github.com/tj/node-prune/cmd/node-prune
 
 
 # Builder image for Git to copy into the base Debian image.
-FROM debian as builder-git
+FROM debian:sid-20190812-slim as builder-git
 COPY install-slim-debian-git.sh /usr/bin/
 RUN /usr/bin/install-slim-debian-git.sh
+
+
+FROM debian as builder-git-src
+ARG GIT_VERSION=2.23.0
+RUN set -eux \
+  && apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+         gcc libc-dev zlib1g-dev curl ca-certificates make libssl-dev \
+  && curl -L https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz --output git.tar.gz
+COPY install-git-from-src.sh /usr/bin/
+RUN install-git-from-src.sh
 
 
 # Builder image for SSH to copy onto the base Debian image.
@@ -35,6 +51,50 @@ FROM debian as builder-ssh
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends openssh-client
 
+# The base distroless image for langauge specific images. To build:
+#
+# docker build --target distroless-ci -t jschaf/distroless-ci:latest docker/debian-ci
+# docker run --interactive --tty jschaf/distroless-ci:latest /bin/bash
+FROM scratch as distroless-ci
+COPY --from=distroless-base / /
+COPY --from=distroless-base-debug /busybox /bin
+COPY --from=debian \
+  /lib/x86_64-linux-gnu/libselinux.so.1 \
+  /lib/x86_64-linux-gnu/libz.so.1 \
+  /lib/x86_64-linux-gnu/libpcre.so.3 \
+  /lib/x86_64-linux-gnu/
+# Git
+COPY --from=builder-git-src /usr/bin/git /usr/bin/
+COPY --from=builder-git-src /usr/lib/git-core /usr/lib/git-core
+COPY --from=builder-git-src /usr/share/git-core/templates /usr/share/git-core/templates
+COPY --from=builder-git-src /usr/lib/sasl2 /usr/lib/sasl2
+#COPY --from=builder-git-src /usr/lib/x86_64-linux-gnu/engines-1.1 /usr/lib/x86_64-linux-gnu/engines-1.1
+COPY --from=builder-git-src /usr/lib/x86_64-linux-gnu/krb5 /usr/lib/x86_64-linux-gnu/krb5
+COPY --from=builder-git-src /usr/lib/x86_64-linux-gnu/sasl2 /usr/lib/x86_64-linux-gnu/sasl2
+COPY --from=builder-git-src \
+  /usr/lib/x86_64-linux-gnu/liblber-2.4.so.2  \
+  /usr/lib/x86_64-linux-gnu/libldap-2.4.so.2 \
+  /usr/lib/x86_64-linux-gnu/libldap_r-2.4.so.2 \
+  /usr/lib/x86_64-linux-gnu/libnghttp2.so.14 \
+  /usr/lib/x86_64-linux-gnu/libpsl.so.5 \
+  /usr/lib/x86_64-linux-gnu/librtmp.so.1 \
+  /usr/lib/x86_64-linux-gnu/libsasl2.so.2 \
+  /usr/lib/x86_64-linux-gnu/libssh2.so.1 \
+  /usr/lib/x86_64-linux-gnu/
+# SSH
+COPY --from=builder-ssh \
+  /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 \
+  /usr/lib/x86_64-linux-gnu/libcrypto.so.1.0.2 \
+  /usr/lib/x86_64-linux-gnu/libkrb5.so.3 \
+  /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 \
+  /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 \
+  /usr/lib/x86_64-linux-gnu/
+COPY --from=builder-ssh /usr/bin/ssh /usr/bin/ssh
+COPY --from=builder-ssh /usr/lib/openssh /usr/lib/openssh
+COPY --from=builder-ssh \
+  /lib/x86_64-linux-gnu/libkeyutils.so.* \
+  /lib/x86_64-linux-gnu/libcom_err.so.2 \
+  /lib/x86_64-linux-gnu/
 
 # The base Debian image for langauge specific images. To build:
 #
