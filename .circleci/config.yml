@@ -165,3 +165,11 @@ workflows:
           requires:
             - checkout_repo
             - build_node_modules
+      - run_test_debian:
+          requires:
+            - checkout_repo
+            - build_node_modules
+      - run_test_alpine:
+          requires:
+            - checkout_repo
+            - build_node_modules
