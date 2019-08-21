@@ -38,9 +38,9 @@ RUN apt-get update \
 
 # The base Debian image for langauge specific images. To build:
 #
-# docker build --target debian-ci-speed-test -t jschaf/debian-ci-speed-test:latest docker/debian-ci
-# docker run --interactive --tty jschaf/debian-ci-speed-test:latest /bin/bash
-FROM debian as debian-ci-speed-test
+# docker build --target debian-ci -t jschaf/debian-ci-speed-test:latest docker/debian-ci
+# docker run --interactive --tty jschaf/debian-ci:latest /bin/bash
+FROM debian as debian-ci
 # Certs
 COPY --from=builder-certs /etc/ssl/certs /etc/ssl/certs
 # Git
@@ -97,9 +97,9 @@ RUN set -eux \
 
 # The main image for Node building and testing. To build:
 #
-# docker build --target debian-ci-speed-test-node -t jschaf/debian-ci-speed-test-node:latest docker/debian-ci
-# docker run --interactive --tty jschaf/debian-ci-speed-test-node:latest /bin/bash
-FROM debian-ci-speed-test as debian-ci-speed-test-node
+# docker build --target debian-ci-node -t jschaf/debian-ci-node:latest docker/debian-ci
+# docker run --interactive --tty jschaf/debian-ci-node:latest /bin/bash
+FROM debian-ci as debian-ci-node
 # Node and NPM
 COPY --from=builder-node /usr/local/bin/node /usr/local/bin/
 COPY --from=builder-node /home/ci/ci_speed_test /home/ci/
