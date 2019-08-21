@@ -18,6 +18,13 @@ NODE_MODULES_DIR='/dev/shm/ci/ci_speed_test/node_modules'
 printf '
 # Checking if node_modules cache is fresh
 =========================================\n'
+# The precheck step downloads a single file with cache key for the node_modules
+# which is a few bytes large. If the cache key didn't change we skip the rest
+# of this job.
+#
+# Restoring the node_modules cache takes about 1 second per 10MB. Since the
+# compressed node modules cache is 120MB, the precheck step saves about
+# 12 seconds.
 
 current_hash_file="${REPO_DIR}/.circleci/node_modules_cache_key"
 if [[ ! -e "${current_hash_file}" ]]; then
