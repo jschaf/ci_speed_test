@@ -80,7 +80,7 @@ aliases:
 
   - &USE_DOCKER_NODE_IMAGE
     docker:
-      - image: jschaf/alpine-ci-node:latest
+      - image: jschaf/distroless-ci-node:latest
 
   - &ATTACH_CODE_WORKSPACE
     attach_workspace:

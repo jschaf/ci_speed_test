@@ -10,9 +10,13 @@ cd git-${GIT_VERSION}
 export NO_CURL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_PERL=1 NO_PYTHON=1 NO_TCLTK=1
 export NO_INSTALL_HARDLINKS=1 NO_OPENSSL=1 NO_CROSS_DIRECTORY_HARDLINKS=1
 
-CFLAGS='-g -O2 -fdebug-prefix-map=/=. -fstack-protector-strong -Wformat -Werror=format-security' \
-make -j8 prefix=/usr gitexecdir=/usr/lib/git-core install
+# Can't figure out how to override these with env vars, so do it manually.
+CFLAGS='-g -Os -fdebug-prefix-map=/=. -fstack-protector-strong -Wformat -Werror=format-security -static'
+sed -i "s#CFLAGS = -g -O2 -Wall#CFLAGS = ${CFLAGS}#" Makefile
+make -j8 prefix=/usr gitexecdir=/usr/lib/git-core all
 make prefix=/usr gitexecdir=/usr/lib/git-core install
+
+strip /usr/bin/git
 
 cd /usr/lib/git-core
 rm git-add--interactive git-bisect git-credential-cache git-credential-cache--daemon \

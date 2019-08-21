@@ -3,4 +3,4 @@
 // Runnable shims on the normal filesystem to get around noexec
 // limitation on /dev/shm.
 
-require("mocha/bin/mocha");
+require("../node_modules/mocha/bin/mocha");

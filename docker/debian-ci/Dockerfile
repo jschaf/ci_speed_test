@@ -35,12 +35,18 @@ COPY install-slim-debian-git.sh /usr/bin/
 RUN /usr/bin/install-slim-debian-git.sh
 
 
+FROM debian as builder-bash
+RUN set -eux \
+  && apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends bash-static
+
+
 FROM debian as builder-git-src
 ARG GIT_VERSION=2.23.0
 RUN set -eux \
   && apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-         gcc libc-dev zlib1g-dev curl ca-certificates make libssl-dev \
+         gcc autoconf libc-dev zlib1g-dev curl ca-certificates make libssl-dev \
   && curl -L https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz --output git.tar.gz
 COPY install-git-from-src.sh /usr/bin/
 RUN install-git-from-src.sh
@@ -61,26 +67,13 @@ COPY --from=distroless-base-debug /busybox /bin
 COPY --from=debian \
   /lib/x86_64-linux-gnu/libselinux.so.1 \
   /lib/x86_64-linux-gnu/libz.so.1 \
-  /lib/x86_64-linux-gnu/libpcre.so.3 \
   /lib/x86_64-linux-gnu/
+# Bash
+COPY --from=builder-bash /bin/bash-static /bin/bash
 # Git
 COPY --from=builder-git-src /usr/bin/git /usr/bin/
 COPY --from=builder-git-src /usr/lib/git-core /usr/lib/git-core
 COPY --from=builder-git-src /usr/share/git-core/templates /usr/share/git-core/templates
-COPY --from=builder-git-src /usr/lib/sasl2 /usr/lib/sasl2
-#COPY --from=builder-git-src /usr/lib/x86_64-linux-gnu/engines-1.1 /usr/lib/x86_64-linux-gnu/engines-1.1
-COPY --from=builder-git-src /usr/lib/x86_64-linux-gnu/krb5 /usr/lib/x86_64-linux-gnu/krb5
-COPY --from=builder-git-src /usr/lib/x86_64-linux-gnu/sasl2 /usr/lib/x86_64-linux-gnu/sasl2
-COPY --from=builder-git-src \
-  /usr/lib/x86_64-linux-gnu/liblber-2.4.so.2  \
-  /usr/lib/x86_64-linux-gnu/libldap-2.4.so.2 \
-  /usr/lib/x86_64-linux-gnu/libldap_r-2.4.so.2 \
-  /usr/lib/x86_64-linux-gnu/libnghttp2.so.14 \
-  /usr/lib/x86_64-linux-gnu/libpsl.so.5 \
-  /usr/lib/x86_64-linux-gnu/librtmp.so.1 \
-  /usr/lib/x86_64-linux-gnu/libsasl2.so.2 \
-  /usr/lib/x86_64-linux-gnu/libssh2.so.1 \
-  /usr/lib/x86_64-linux-gnu/
 # SSH
 COPY --from=builder-ssh \
   /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 \
@@ -92,9 +85,11 @@ COPY --from=builder-ssh \
 COPY --from=builder-ssh /usr/bin/ssh /usr/bin/ssh
 COPY --from=builder-ssh /usr/lib/openssh /usr/lib/openssh
 COPY --from=builder-ssh \
-  /lib/x86_64-linux-gnu/libkeyutils.so.* \
+  /lib/x86_64-linux-gnu/libkeyutils.so.1 \
   /lib/x86_64-linux-gnu/libcom_err.so.2 \
+  /lib/x86_64-linux-gnu/libpcre.so.3 \
   /lib/x86_64-linux-gnu/
+RUN echo "export PS1='\u@\h:\w\$ '" > /root/.bashrc
 
 # The base Debian image for langauge specific images. To build:
 #
@@ -140,32 +135,50 @@ RUN set -eux \
 
 # Builder image for Node customization.
 FROM node:${NODE_VERSION}-stretch as builder-node
-ARG CI_HOME=/home/ci
 ARG REPO=/home/ci/ci_speed_test
 # node-prune
 COPY --from=builder-node-prune /go/bin/node-prune /usr/local/bin/
+ARG NODE_MODULES=/usr/local/lib/node_modules
+RUN set -eux \
+  && rm -rf ${NODE_MODULES}/npm/{man,html,doc,changelogs} \
+  && find ${NODE_MODULES} -type f -name '*.min.js'  | xargs rm -f \
+  && node-prune ${NODE_MODULES}
+
+
+# docker build --target distroless-ci-node -t jschaf/distroless-ci-node:latest docker/debian-ci
+# docker run --interactive --tty --entrypoint node jschaf/distroless-ci-node:latest
+FROM distroless-ci as distroless-ci-node
+ARG CI_HOME=/home/ci
+# Node and NPM
+COPY --from=builder-node /usr/local/bin/node /usr/local/bin/
+COPY --from=builder-node /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=builder-node '/usr/lib/x86_64-linux-gnu/libstdc++.so.6' /usr/lib/x86_64-linux-gnu/
+COPY --from=builder-node /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/x86_64-linux-gnu/
+# node-prune
+COPY --from=builder-node-prune /go/bin/node-prune /usr/local/bin/
+# Shims
 COPY shim_mocha.js ${REPO}/bin/mocha
 COPY shim_tsc.js ${REPO}/bin/tsc
 RUN set -eux \
-  && node_modules='/usr/local/lib/node_modules' \
-  && node-prune ${node_modules} \
-  && rm -rf ${node_modules}/npm/man \
-  && find ${node_modules} -type f -name '*.min.js'  | xargs rm -f \
-  && mkdir -p ${REPO} \
-  && ln -s /dev/shm/ci_speed_test/node_modules ${REPO}/node_modules
-
+  && ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+  && mkdir -p ${CI_HOME} \
+  && echo 'export PATH="/home/ci/ci_speed_test/bin:${PATH}"' >> /root/.bashrc
+WORKDIR /home/ci
 
 # The main image for Node building and testing. To build:
 #
 # docker build --target debian-ci-node -t jschaf/debian-ci-node:latest docker/debian-ci
 # docker run --interactive --tty jschaf/debian-ci-node:latest /bin/bash
 FROM debian-ci as debian-ci-node
+ARG CI_HOME=/home/ci
 # Node and NPM
 COPY --from=builder-node /usr/local/bin/node /usr/local/bin/
-COPY --from=builder-node /home/ci/ci_speed_test /home/ci/
 COPY --from=builder-node /usr/local/lib/node_modules /usr/local/lib/node_modules
 # node-prune
 COPY --from=builder-node-prune /go/bin/node-prune /usr/local/bin/
+# Shims
+COPY shim_mocha.js ${REPO}/bin/mocha
+COPY shim_tsc.js ${REPO}/bin/tsc
 RUN set -eux \
   && ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
   && mkdir -p ${CI_HOME} \
