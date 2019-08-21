@@ -105,6 +105,7 @@ jobs:
           paths:
             - .
 
+  # Builds and caches node_modules if the cache key has changed.
   build_node_modules:
     <<: *USE_DOCKER_NPM_IMAGE
     <<: *SET_WORKING_DIR_TO_REPO
@@ -140,7 +141,7 @@ jobs:
           name: hi
           command: |
             circleci step help || true
-            circleci help step || true
+            circleci help || true
 
 
 workflows:

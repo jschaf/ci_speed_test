@@ -49,7 +49,7 @@ echo "cache_status: ${precheck_status}"
 
 if [[ "${precheck_status}" == 'fresh' ]]; then
   printf '\nSkipping installing node_modules because because the cache is fresh.\n'
-  circleci step halt
+  circleci task halt
   exit 0
 fi
 
