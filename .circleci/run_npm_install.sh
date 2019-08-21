@@ -4,17 +4,16 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-# Runs `npm ci` if the node_modules cache is not fresh.
-#
-# The cache staleness is determined by check_node_modules_cache_freshness.sh.
+# Installs the node modules for this project.
 
 echo "node version: $(node --version)"
 echo "npm version: $(npm --version)"
 echo
 
 if [[ "${NODE_MODULES_CACHE_STATUS}" == 'fresh' ]]; then
-  echo 'Skipping `npm install` because package-lock.json has not changed.'
-  exit 0
+  echo 'ERROR: running npm install even though cache is fresh.'
+  echo '  check_node_modules_cache_freshness should have halted this job.'
+  exit 1
 fi
 
 # Move to /dev/shm because we want the speed up of having node_modules in /dev/shm.
