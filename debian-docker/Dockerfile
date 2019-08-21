@@ -50,6 +50,7 @@ COPY --from=builder-certs /etc/ssl/certs /etc/ssl/certs
 # Git
 COPY --from=builder-git /usr/bin/git /usr/bin/
 COPY --from=builder-git /usr/lib/git-core /usr/lib/git-core
+COPY --from=builder-git /usr/share/git-core/templates /usr/share/git-core/templates
 COPY --from=builder-git /usr/lib/sasl2 /usr/lib/sasl2
 COPY --from=builder-git /usr/lib/x86_64-linux-gnu/engines-1.1 /usr/lib/x86_64-linux-gnu/engines-1.1
 COPY --from=builder-git /usr/lib/x86_64-linux-gnu/krb5 /usr/lib/x86_64-linux-gnu/krb5
@@ -105,7 +106,9 @@ FROM debian-ci-speed-test as debian-ci-speed-test-node
 # Node and NPM
 COPY --from=builder-node /usr/local/bin/node /usr/local/bin/
 COPY --from=builder-node /home/ci/ci_speed_test /home/ci/
+COPY --from=builder-node /usr/local/lib/node_modules /usr/local/lib/node_modules
 # node-prune
+COPY --from=builder-node-prune /go/bin/node-prune /usr/local/bin/
 RUN set -eux \
   && ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
   && mkdir -p ${CI_HOME} \
@@ -114,13 +117,3 @@ USER ci
 WORKDIR /home/ci
 CMD ["/bin/bash"]
 
-
-# The main image with both Node and NPM built-in.
-#
-# docker build --target debian-ci-speed-test-node-npm -t jschaf/debian-ci-speed-test-node-npm:latest debian-docker
-# docker run --interactive --tty jschaf/debian-ci-speed-test-node-npm:latest
-FROM debian-ci-speed-test-node as debian-ci-speed-test-node-npm
-# NPM
-COPY --from=builder-node /usr/local/lib/node_modules /usr/local/lib/node_modules
-# node-prune
-COPY --from=builder-node-prune /go/bin/node-prune /usr/local/bin/

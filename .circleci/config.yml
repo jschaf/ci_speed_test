@@ -78,10 +78,6 @@ aliases:
     docker:
       - image: jschaf/debian-ci-speed-test-node:latest
 
-  - &USE_DOCKER_NPM_IMAGE
-    docker:
-      - image: jschaf/debian-ci-speed-test-node-npm:latest
-
   - &ATTACH_CODE_WORKSPACE
     attach_workspace:
       at: /home/ci/ci_speed_test
@@ -107,7 +103,7 @@ jobs:
 
   # Builds and caches node_modules if the cache key has changed.
   build_node_modules:
-    <<: *USE_DOCKER_NPM_IMAGE
+    <<: *USE_DOCKER_NODE_IMAGE
     <<: *SET_WORKING_DIR_TO_REPO
     steps:
       - <<: *RUN_CHECKOUT_SHALLOW_GIT_REPO
@@ -132,7 +128,7 @@ jobs:
             - /dev/shm/ci/ci_speed_test/node_modules
 
   run_test:
-    <<: *USE_DOCKER_NPM_IMAGE
+    <<: *USE_DOCKER_NODE_IMAGE
     <<: *SET_WORKING_DIR_TO_REPO
     steps:
       - <<: *ATTACH_CODE_WORKSPACE
