@@ -1,5 +1,5 @@
 ARG DEBIAN_VERSION=sid-20190812-slim
-ARG NODE_VERSION=10.15.3-stretch
+ARG NODE_VERSION=10.15.3
 ARG PYTHON_VERSION=2.7.16
 
 ARG CI_HOME=/home/ci
@@ -19,13 +19,9 @@ RUN apt-get update \
 
 
 # Builder image for the node-prune utility.
-#
-# docker build --target builder-go -t jschaf/ci-speed-test-builder-go:latest debian-docker
-# docker run --interactive --tty --rm jschaf/ci-speed-test-builder-go:latest
+# Binary saved at /go/bin/node-prune.
 FROM golang:1.12.9-alpine3.10 as builder-node-prune
-RUN set -eux \
-  && apk add --no-cache git \
-  && go get github.com/tj/node-prune/cmd/node-prune
+RUN apk add --no-cache git && go get github.com/tj/node-prune/cmd/node-prune
 
 
 # Builder image for Git to copy into the base Debian image.
@@ -42,7 +38,7 @@ RUN apt-get update \
 
 # The base Debian image for langauge specific images. To build:
 #
-# docker build --target debian-ci-speed-test -t jschaf/debian-ci-speed-test:latest debian-docker
+# docker build --target debian-ci-speed-test -t jschaf/debian-ci-speed-test:latest docker/debian-ci
 # docker run --interactive --tty jschaf/debian-ci-speed-test:latest /bin/bash
 FROM debian as debian-ci-speed-test
 # Certs
@@ -83,7 +79,7 @@ RUN set -eux \
 
 
 # Builder image for Node customization.
-FROM node:${NODE_VERSION} as builder-node
+FROM node:${NODE_VERSION}-stretch as builder-node
 ARG CI_HOME=/home/ci
 ARG REPO=/home/ci/ci_speed_test
 # node-prune
@@ -100,7 +96,7 @@ RUN set -eux \
 
 # The main image for Node building and testing. To build:
 #
-# docker build --target debian-ci-speed-test-node -t jschaf/debian-ci-speed-test-node:latest debian-docker
+# docker build --target debian-ci-speed-test-node -t jschaf/debian-ci-speed-test-node:latest docker/debian-ci
 # docker run --interactive --tty jschaf/debian-ci-speed-test-node:latest /bin/bash
 FROM debian-ci-speed-test as debian-ci-speed-test-node
 # Node and NPM
