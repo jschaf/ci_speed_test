@@ -89,8 +89,7 @@ aliases:
   - &RESTORE_NODE_MODULES_CACHE
     restore_cache:
       name: Restoring cache for node_modules
-      keys:
-        - node-modules-ci-cache-v1-{{ checksum ".circleci/node_modules_cache_key" }}
+      <<: *NODE_MODULES_CACHE_RESTORE_KEY
 jobs:
   # Checks out the repo and persists it to a CircleCI workspace so it can be
   # used by all subsequent jobs in a single CircleCI workflow.
@@ -131,9 +130,25 @@ jobs:
           paths:
             - /dev/shm/ci/ci_speed_test/node_modules
 
+  run_test:
+    <<: *USE_DOCKER_NPM_IMAGE
+    <<: *SET_WORKING_DIR_TO_REPO
+    steps:
+      - <<: *RESTORE_NODE_MODULES_CACHE
+      - run:
+          name: hi
+          command: |
+            circleci step help || true
+            circleci help step || true
+
+
 workflows:
   version: 2
   test:
     jobs:
       - checkout_repo
       - build_node_modules
+      - run_test:
+          requires:
+            - checkout_repo
+            - build_node_modules

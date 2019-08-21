@@ -37,7 +37,7 @@ printf 'value from %-55s %s\n' "${precheck_hash_file}" "${precheck_hash}"
 echo "cache_status: ${precheck_status}"
 
 if [[ "${precheck_status}" == 'fresh' ]]; then
-  printf '\nHalting this job because the cache is fresh.\n'
+  printf '\nSkipping installing node_modules because because the cache is fresh.\n'
   circleci step halt
   exit 0
 fi
@@ -57,6 +57,12 @@ cp package-lock.json old-package-lock.json
 
 # Install node_modules.
 npm ci --ignore-scripts --prefer-offline --no-audit
+
+
+printf '
+node_modules size
+=================\n'
+time du -sh /dev/shm/ci/ci_speed_test/node_modules
 
 # npm ci deletes node_modules before starting, so this needs to come after
 # npm ci.
