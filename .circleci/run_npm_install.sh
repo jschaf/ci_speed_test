@@ -64,6 +64,12 @@ cd ${REPO_RAMFS_DIR}
 npm ci --ignore-scripts --prefer-offline --no-audit
 
 printf '
+# Updating precheck cache key
+=============================\n'
+echo "Writing hash '${precheck_hash}' to ${precheck_hash_file}."
+echo "${precheck_hash}" > "${precheck_hash_file}"
+
+printf '
 # Pruning node_modules
 ======================'
 node-prune ${NODE_MODULES_DIR}
