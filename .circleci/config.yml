@@ -118,9 +118,6 @@ jobs:
           name: Restoring node_modules precheck cache key
           <<: *NODE_MODULES_PRECHECK_CACHE_RESTORE_KEY
       - run:
-          name: Halting with success if node_modules cache is up-to-date
-          command: .circleci/check_node_modules_cache_freshness.sh
-      - run:
           name: Installing NPM dependencies into node_modules
           command: .circleci/run_npm_install.sh
       - save_cache:
