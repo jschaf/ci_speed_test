@@ -39,6 +39,7 @@ echo "cache_status: ${precheck_status}"
 if [[ "${precheck_status}" == 'fresh' ]]; then
   printf '\nHalting this job because the cache is fresh.\n'
   circleci step halt
+  exit 0
 fi
 
 printf '
@@ -47,8 +48,8 @@ printf '
 
 # Move to /dev/shm because for IO speedup.
 mkdir -p /dev/shm/ci/ci_speed_test
-# npm ci only depends on package-lock.json.
 cp /home/ci/ci_speed_test/package-lock.json /dev/shm/ci/ci_speed_test
+cp /home/ci/ci_speed_test/package.json /dev/shm/ci/ci_speed_test
 cd /dev/shm/ci/ci_speed_test
 
 # Make a backup to check if npm ci changed package-lock.json.
