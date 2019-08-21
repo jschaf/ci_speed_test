@@ -11,13 +11,13 @@ set -o pipefail
 # current state of the repo matches the cache key for the node_modules
 # precheck key.
 
-REPO_DIR='/home/ci/ci_speed_test/'
+REPO_DIR='/home/ci/ci_speed_test'
 REPO_RAMFS_DIR='/dev/shm/ci/ci_speed_test'
 NODE_MODULES_DIR='/dev/shm/ci/ci_speed_test/node_modules'
 
 printf '
 # Checking if node_modules cache is fresh
-=========================================\n\n'
+=========================================\n'
 
 current_hash_file="${REPO_DIR}/.circleci/node_modules_cache_key"
 if [[ ! -e "${current_hash_file}" ]]; then
@@ -48,7 +48,7 @@ fi
 
 printf '
 # Installing node_modules because cache is stale
-================================================\n\n'
+================================================\n'
 
 echo "node version: $(node --version)"
 echo "npm version: $(npm --version)"
@@ -65,11 +65,11 @@ npm ci --ignore-scripts --prefer-offline --no-audit
 
 printf '
 # Pruning node_modules
-======================\n\n'
+======================'
 node-prune ${NODE_MODULES_DIR}
 
 printf '
 # node_modules size
-===================\n\n'
+===================\n'
 du -sh ${NODE_MODULES_DIR}
 
