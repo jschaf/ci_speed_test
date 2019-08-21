@@ -36,8 +36,8 @@ if [[ -f "${precheck_hash_file}" ]]; then
   fi
 fi
 
-printf 'value from %-55s %s\n' "${current_hash_file}" "${current_hash}"
-printf 'value from %-55s %s\n' "${precheck_hash_file}" "${precheck_hash}"
+printf 'value from %-65s %s\n' "${current_hash_file}" "${current_hash}"
+printf 'value from %-65s %s\n' "${precheck_hash_file}" "${precheck_hash}"
 echo "cache_status: ${precheck_status}"
 
 if [[ "${precheck_status}" == 'fresh' ]]; then
@@ -47,8 +47,8 @@ if [[ "${precheck_status}" == 'fresh' ]]; then
 fi
 
 printf '
-# Installing node_modules
-=========================\n\n'
+# Installing node_modules because cache is stale
+================================================\n\n'
 
 # Move to /dev/shm because for IO speedup.
 mkdir -p /dev/shm/ci/ci_speed_test
@@ -64,8 +64,3 @@ printf '
 ===================\n'
 du -sh /dev/shm/ci/ci_speed_test/node_modules
 
-# npm ci deletes node_modules before starting, so this needs to come after
-# npm ci.
-echo
-echo "Writing hash ${current_hash} to ${precheck_hash_file}"
-echo "${current_hash}" > "${precheck_hash_file}"
