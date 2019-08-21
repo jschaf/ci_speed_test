@@ -6,9 +6,9 @@ set -o pipefail
 
 # Installs the node modules for this project.
 #
-# The script halts the CircleCI job that runs this script if the node_modules
-# cache is fresh. The cache is fresh if the node_modules cache key for the
-# current state of the repo matches the cache key for the node_modules
+# If the existing node_modules cache is fresh, this script halts the CircleCI
+# job that runs this script. The cache is fresh if the node_modules cache key
+# for the current state of the repo matches the cache key for the node_modules
 # precheck key.
 
 REPO_DIR='/home/ci/ci_speed_test'
