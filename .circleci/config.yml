@@ -44,7 +44,6 @@ aliases:
         }
 
         BRANCH_NAME="${CIRCLE_BRANCH:-default_ci_branch}"
-        BRANCH_NAME=default_ci_branch
         printf "
         # Cloning repo and fetching the right commit
         ============================================
