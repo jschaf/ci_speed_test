@@ -65,7 +65,7 @@ aliases:
         # --force to always update the local branch.
         printf 'Fetching\n'
         # -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
-        GIT_TRACE=1 GIT_SSH_COMMAND='ssh -vv' \
+        GIT_TRACE=1 GIT_SSH_COMMAND='ssh -v' \
             git fetch --depth=1 --update-head-ok --force origin \
                 "${CIRCLE_SHA1}:${CIRCLE_BRANCH}" || handle_failed_git_fetch
         git checkout --quiet ${CIRCLE_BRANCH}
