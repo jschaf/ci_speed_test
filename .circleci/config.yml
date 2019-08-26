@@ -48,14 +48,14 @@ aliases:
         printf "
         # Cloning repo and fetching the right commit
         ============================================
-        Fetching SHA1 ${CIRCLE_SHA1} as branch '${BRANCH_NAME} from ${CIRCLE_REPOSITORY_URL}.
+        Fetching SHA1 ${CIRCLE_SHA1} as branch ${BRANCH_NAME} from ${CIRCLE_REPOSITORY_URL}.
         \n"
 
         git init
         git remote add origin "${CIRCLE_REPOSITORY_URL}"
         # Fetch the SHA1 object directly and assign it the name $BRANCH_NAME.
         git fetch --depth=1 --force origin "${CIRCLE_SHA1}:${BRANCH_NAME}" || handle_failed_git_fetch
-        git checkout --quiet local_ci_branch
+        git checkout --quiet ${BRANCH_NAME}
 
   - &RUN_CREATE_NODE_MODULES_CACHE_KEY
     run:
