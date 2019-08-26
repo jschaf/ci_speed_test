@@ -53,7 +53,8 @@ aliases:
         git init
         git remote add origin "${CIRCLE_REPOSITORY_URL}"
         # Fetch the SHA1 object directly and assign it the name $BRANCH_NAME.
-        git fetch --depth=1 --force origin "${CIRCLE_SHA1}:${BRANCH_NAME}" || handle_failed_git_fetch
+        git fetch --depth=1 --update-head-ok --force origin \
+            "${CIRCLE_SHA1}:${BRANCH_NAME}" || handle_failed_git_fetch
         git checkout --quiet ${BRANCH_NAME}
 
   - &RUN_CREATE_NODE_MODULES_CACHE_KEY
