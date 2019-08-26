@@ -47,12 +47,12 @@ aliases:
         printf "
         # Cloning repo and fetching the right commit
         ============================================
-        Fetching from: ${CIRCLE_REPOSITORY_URL}.
+        Fetching from: ${CIRCLE_REPOSITORY_URL}
         SHA1 Hash:     ${CIRCLE_SHA1}
         Branch:        ${BRANCH_NAME}
         Tag:           ${CIRCLE_TAG:-<no tag for this SHA1>}\n\n"
 
-        git init
+        git init --bare --quiet
         git remote add origin "${CIRCLE_REPOSITORY_URL}"
         # Fetch the repo state at SHA1 directly and give the local branch
         # name $BRANCH_NAME.
