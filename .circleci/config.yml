@@ -47,6 +47,7 @@ aliases:
         # Cloning repo and fetching the right commit
         ============================================
         Fetching from: ${CIRCLE_REPOSITORY_URL}
+        Working dir:   ${REPO_DIR}
         SHA1 Hash:     ${CIRCLE_SHA1}
         Branch:        ${CIRCLE_BRANCH}
         Tag:           ${CIRCLE_TAG:-<no tag for this commit>}\n\n"
