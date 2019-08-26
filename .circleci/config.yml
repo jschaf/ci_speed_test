@@ -34,6 +34,7 @@ aliases:
 
         handle_failed_git_fetch() {
           printf "ERROR: failed to fetch from GitHub. Possible causes:
+            - Look two lines up for fatal logs.
             - The Git version ($(git --version)) isn't new enough to fetch a
               SHA1 hash directly.
             - UNLIKELY: GitHub is rate-limiting us for using the --depth=1 option.
@@ -43,6 +44,7 @@ aliases:
         }
 
         BRANCH_NAME="${CIRCLE_BRANCH:-default_ci_branch}"
+        BRANCH_NAME=default_ci_branch
         printf "
         # Cloning repo and fetching the right commit
         ============================================
