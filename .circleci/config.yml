@@ -53,8 +53,13 @@ aliases:
         git init
         git remote add origin "${CIRCLE_REPOSITORY_URL}"
         # Fetch the SHA1 object directly and assign it the name $BRANCH_NAME.
+        # --depth=1 for a shallow clone.
+        # --update-head-ok to allow updating the current HEAD. Occurs when
+        #     CIRCLE_BRANCH is master.
+        # --force to always update the local branch.
         git fetch --depth=1 --update-head-ok --force origin \
             "${CIRCLE_SHA1}:${BRANCH_NAME}" || handle_failed_git_fetch
+        printf 'tag: %s\n' "${CIRCLE_TAG:-<no-tag-found>}"
         git checkout --quiet ${BRANCH_NAME}
 
   - &RUN_CREATE_NODE_MODULES_CACHE_KEY
