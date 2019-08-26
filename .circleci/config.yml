@@ -63,8 +63,9 @@ aliases:
         #     CIRCLE_BRANCH is master.
         # --force to always update the local branch.
         printf 'Fetching\n'
-        git fetch --depth=1 --update-head-ok --force origin \
-            "${CIRCLE_SHA1}:${CIRCLE_BRANCH}" || handle_failed_git_fetch
+        GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" \
+            git fetch --depth=1 --update-head-ok --force origin \
+                "${CIRCLE_SHA1}:${CIRCLE_BRANCH}" || handle_failed_git_fetch
         git checkout --quiet ${CIRCLE_BRANCH}
 
   - &RUN_CREATE_NODE_MODULES_CACHE_KEY
@@ -179,18 +180,18 @@ workflows:
           requires:
             - checkout_repo
             - build_node_modules
-      - run_test_alpine:
-          requires:
-            - checkout_repo
-            - build_node_modules
-      - run_test_debian:
-          requires:
-            - checkout_repo
-            - build_node_modules
-      - run_test_alpine:
-          requires:
-            - checkout_repo
-            - build_node_modules
+#      - run_test_alpine:
+#          requires:
+#            - checkout_repo
+#            - build_node_modules
+#      - run_test_debian:
+#          requires:
+#            - checkout_repo
+#            - build_node_modules
+#      - run_test_alpine:
+#          requires:
+#            - checkout_repo
+#            - build_node_modules
   # Check that the checkout_repo job correctly sets the tag.
   tagged_test:
     jobs:
