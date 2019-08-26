@@ -47,13 +47,16 @@ aliases:
         printf "
         # Cloning repo and fetching the right commit
         ============================================
-        Fetching SHA1 ${CIRCLE_SHA1} from ${CIRCLE_REPOSITORY_URL}\n."
-        [[ -n "${CIRCLE_TAG}" ]] && printf "Tag: ${CIRCLE_TAG}\n"
-        printf "Branch: ${CIRCLE_BRANCH}\n\n"
+        Fetching from: ${CIRCLE_REPOSITORY_URL}.
+        SHA1 Hash:     ${CIRCLE_SHA1}
+        Branch:        ${BRANCH_NAME}
+        Tag:           ${CIRCLE_TAG:-<no tag for this SHA1>}\n\n"
 
         git init
         git remote add origin "${CIRCLE_REPOSITORY_URL}"
-        # Fetch the SHA1 object directly and assign it the name $BRANCH_NAME.
+        # Fetch the repo state at SHA1 directly and give the local branch
+        # name $BRANCH_NAME.
+        #
         # --depth=1 for a shallow clone.
         # --update-head-ok to allow updating the current HEAD. Occurs when
         #     CIRCLE_BRANCH is master.
