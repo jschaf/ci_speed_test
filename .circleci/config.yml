@@ -26,27 +26,33 @@ aliases:
         REPO_DIR="/home/ci/${CIRCLE_PROJECT_REPONAME}"
         mkdir -p "${REPO_DIR}"
         cd "${REPO_DIR}"
+        # We always expect this step to be called in a fresh container.
         if [[ -d .git ]]; then
           echo "ERROR: Git directory already exists at ${PWD}."
           exit 1
         fi
 
         handle_failed_git_fetch() {
-          echo 'ERROR: failed to fetch from GitHub. Possible causes:'
-          echo -n '  - GitHub is rate-limiting us for using the --depth=1 option. '
-          echo 'https://github.com/circleci/circleci-docs/issues/2040#issuecomment-368129275'
+          printf "ERROR: failed to fetch from GitHub. Possible causes:
+            - The Git version ($(git --version)) isn't new enough to fetch a
+              SHA1 hash directly.
+            - UNLIKELY: GitHub is rate-limiting us for using the --depth=1 option.
+              https://github.com/circleci/circleci-docs/issues/2040#issuecomment-368129275'
+          "
           exit 1
         }
 
-        echo
-        echo '# Cloning repo and fetching the right commit'
-        echo '============================================'
-        echo "Fetching SHA1 ${CIRCLE_SHA1} from ${CIRCLE_REPOSITORY_URL}."
-        echo
+        BRANCH_NAME="${CIRCLE_BRANCH:-default_ci_branch}"
+        printf "
+        # Cloning repo and fetching the right commit
+        ============================================
+        Fetching SHA1 ${CIRCLE_SHA1} as branch '${BRANCH_NAME} from ${CIRCLE_REPOSITORY_URL}.
+        \n"
+
         git init
         git remote add origin "${CIRCLE_REPOSITORY_URL}"
-        # Fetch the SHA1 object directly and assign it the name local_ci_branch.
-        git fetch --depth=1 --force origin "${CIRCLE_SHA1}:local_ci_branch" || handle_failed_git_fetch
+        # Fetch the SHA1 object directly and assign it the name $BRANCH_NAME.
+        git fetch --depth=1 --force origin "${CIRCLE_SHA1}:${BRANCH_NAME}" || handle_failed_git_fetch
         git checkout --quiet local_ci_branch
 
   - &RUN_CREATE_NODE_MODULES_CACHE_KEY
@@ -173,3 +179,10 @@ workflows:
           requires:
             - checkout_repo
             - build_node_modules
+  # Check that the checkout_repo job correctly sets the tag.
+  tagged_test:
+    jobs:
+      - checkout_repo:
+          filters:
+            tags:
+              only: /^.*/
