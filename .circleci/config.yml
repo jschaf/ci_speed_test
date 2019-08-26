@@ -24,7 +24,6 @@ aliases:
         (echo "${CHECKOUT_KEY:-}" > ${HOME}/.ssh/id_rsa)
 
         git config --global gc.auto 0
-        git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
         REPO_DIR="/home/ci/${CIRCLE_PROJECT_REPONAME}"
         mkdir -p "${REPO_DIR}"
@@ -65,7 +64,8 @@ aliases:
         #     CIRCLE_BRANCH is master.
         # --force to always update the local branch.
         printf 'Fetching\n'
-        GIT_TRACE=1 GIT_SSH_COMMAND="ssh -vvv -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" \
+        # -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+        GIT_TRACE=1 GIT_SSH_COMMAND='ssh -vv' \
             git fetch --depth=1 --update-head-ok --force origin \
                 "${CIRCLE_SHA1}:${CIRCLE_BRANCH}" || handle_failed_git_fetch
         git checkout --quiet ${CIRCLE_BRANCH}
