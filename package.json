@@ -68,7 +68,7 @@
     "@types/webpack": "4.4.33",
     "@types/xml2js": "0.4.4",
     "@types/yargs": "^12.0.8",
-    "acorn": "5.5.3",
+    "acorn": "5.7.4",
     "ajv": "4.9.0",
     "always-tail2": "1.0.0",
     "async": "1.5.0",
