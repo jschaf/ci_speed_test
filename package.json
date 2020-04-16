@@ -193,7 +193,7 @@
     "node-ansible": "0.5.5",
     "node-marketo-rest": "^0.7.5",
     "node-unzip-2": "0.2.7",
-    "node-uuid": "1.4.2",
+    "node-uuid": "1.4.8",
     "node-zookeeper-client": "0.2.2",
     "normalize.css": "3.0.3",
     "object-hash": "1.1.8",
