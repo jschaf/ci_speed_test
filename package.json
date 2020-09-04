@@ -232,7 +232,7 @@
     "rimraf": "2.5.2",
     "rivets": "0.9.1",
     "s3-upload-stream": "1.0.7",
-    "saml2-js": "1.12.4",
+    "saml2-js": "2.0.5",
     "sauce-connect-launcher": "1.2.4",
     "scp": "0.0.3",
     "scroll-into-view-if-needed": "^2.2.0",
